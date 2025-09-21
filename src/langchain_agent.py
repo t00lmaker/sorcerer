@@ -17,17 +17,17 @@ class LangChainAgent:
     def __init__(self, prompt_template: str):
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash", 
-            temperature=0
+            temperature=0,
         )
         self.parser = PydanticOutputParser(pydantic_object=SuggestionsList)
         self.prompt = PromptTemplate(template=prompt_template)
-        self.chain = self.prompt | self.llm | self.parser
+        self.chain = self.llm | self.parser
 
     def generate_suggestions(self, java_code: str, file_path: str) -> SuggestionsList:
         prompt = self.prompt.format(
             file_path=file_path,
             code_class=java_code, 
-            format_instructions=self.parser.get_format_instructions()
+            output_format=self.parser.get_format_instructions()
         )
         
-        return self.chain.run(prompt)
+        return self.chain.invoke(prompt)

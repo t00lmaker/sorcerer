@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566" # Porta para o LocalStack (gateway unificado)
+      - "4576:4576" # Porta para o SQS (opcional)
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - DATA_DIR=./localstack/data
+      - LAMBDA_EXECUTOR=podman
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - ".localstack:/tmp/localstack2"
+
+  sqs-setup:
+    image: amazon/aws-cli:latest
+    container_name: sqs-setup
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+    depends_on:
+      - localstack
+    entrypoint: >
+      sh -c "
+      until curl -s $AWS_ENDPOINT_URL > /dev/null; do
+        echo 'Aguardando LocalStack...';
+        sleep 2;
+      done;
+      aws sqs create-queue --queue-name your-queue-name;
+      echo 'Fila SQS criada com sucesso!';
+      "
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    container_name: migration-agent-api
+    ports:
+      - "8000:8000"
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - SQS_QUEUE_URL=http://localstack:4566/000000000000/your-queue-name
+    depends_on:
+      - localstack
+      - sqs-setup

@@ -3,13 +3,13 @@ from langchain_agent import LangChainAgent
 from dotenv import load_dotenv
 from prompts.java_migration_prompt import system_prompt
 
-
 load_dotenv()
+print("Diretório atual:", os.getenv("GOOGLE_API_KEY"))
 
 def main():
     agent = LangChainAgent(prompt_template=system_prompt)
     code_tests_dir = os.path.join(os.path.dirname(__file__), "code_tests")
-    print("Diretório atual:", os.get_env("GEMINI_API_KEY"))
+    
     for filename in os.listdir(code_tests_dir):
         if filename.endswith(".java"):
             file_path = os.path.join(code_tests_dir, filename)
