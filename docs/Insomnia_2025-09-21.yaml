@@ -1,0 +1,73 @@
+type: collection.insomnia.rest/5.0
+name: java-migration
+meta:
+  id: wrk_34ccfb90268a489589c93af9c169ee34
+  created: 1758415603712
+  modified: 1758415603712
+  description: ""
+collection:
+  - url: http://localhost:8000/analyze
+    name: Request Analyze
+    meta:
+      id: req_1f98c4c6c6ad46e1aeb4720dc8ec9d92
+      created: 1758415615587
+      modified: 1758500490796
+      isPrivate: false
+      description: ""
+      sortKey: -1758415615587
+    method: POST
+    body:
+      mimeType: application/json
+      text: >-
+        {
+        	"id": "{% faker 'randomUUID' %}",
+        	"repo": "https://github.com/containers/podman-composehttps://github.com/containers/podman-compose",
+        	"analyzers": ["java8to21"] 
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.6.1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8000/analyze/66e51d1b-d294-4184-b0a6-dc0d2a568e76
+    name: Get Analyze
+    meta:
+      id: req_61aaf9c2cb7f4cee98abcf3df40316c3
+      created: 1758497166785
+      modified: 1758500368472
+      isPrivate: false
+      description: ""
+      sortKey: -1745313130682
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.6.1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_902bb499ebcc03a8896a7bf95af31f8c7740cd90
+    created: 1758415603715
+    modified: 1758415603715
+environments:
+  name: Base Environment
+  meta:
+    id: env_902bb499ebcc03a8896a7bf95af31f8c7740cd90
+    created: 1758415603713
+    modified: 1758415603713
+    isPrivate: false

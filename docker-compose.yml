@@ -7,8 +7,10 @@ services:
     ports:
       - "4566:4566" # Porta para o LocalStack (gateway unificado)
       - "4576:4576" # Porta para o SQS (opcional)
+      - "4569:4569" # Porta para o DynamoDB
+      - "4568:4568" # Porta para o DAX
     environment:
-      - SERVICES=sqs
+      - SERVICES=sqs,dynamodb,dax
       - DEBUG=1
       - DATA_DIR=./localstack/data
       - LAMBDA_EXECUTOR=podman
@@ -17,7 +19,7 @@ services:
     volumes:
       - ".localstack:/tmp/localstack2"
 
-  sqs-setup:
+  cloud-setup:
     image: amazon/aws-cli:latest
     container_name: sqs-setup
     environment:
@@ -36,6 +38,18 @@ services:
       done;
       aws sqs create-queue --queue-name your-queue-name;
       echo 'Fila SQS criada com sucesso!';
+
+      aws dynamodb create-table \
+        --table-name CodeSuggestions \
+        --attribute-definitions \
+            AttributeName=AnalysisId,AttributeType=S \
+            AttributeName=SuggestionId,AttributeType=S \
+        --key-schema \
+            AttributeName=AnalysisId,KeyType=HASH \
+            AttributeName=SuggestionId,KeyType=RANGE \
+        --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+            --region us-east-1 || echo 'Tabela DynamoDB já existe.';
+      echo 'Tabela DynamoDB criada ou já existe.';
       "
   api:
     build:
@@ -53,4 +67,4 @@ services:
       - SQS_QUEUE_URL=http://localstack:4566/000000000000/your-queue-name
     depends_on:
       - localstack
-      - sqs-setup
+      - cloud-setup

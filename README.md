@@ -1,64 +1,63 @@
-# Java Migration Application
 
-This project is designed to assist developers in modernizing Java code from version 8 to version 21. It utilizes LangChain to analyze Java code and suggest updates that leverage the latest features and best practices of the Java language.
+## Commando utilitários 
 
-## Project Structure
 
-```
-java-migration-app
-├── src
-│   ├── main.py                # Entry point of the application
-│   ├── langchain_agent.py     # Implementation of the LangChain agent
-│   ├── models
-│   │   └── suggestion.py      # Pydantic model for storing suggestions
-│   ├── prompts
-│   │   └── java_migration_prompt.txt # Prompt for analyzing Java code
-│   └── utils
-│       └── file_handler.py    # Utility functions for file operations
-├── tests
-│   ├── test_langchain_agent.py # Unit tests for the LangChain agent
-│   └── test_suggestion_model.py # Unit tests for the Suggestion model
-├── requirements.txt            # Project dependencies
-├── .env                        # Environment variables
-└── README.md                   # Project documentation
-```
+Add uma analise não conclusiva na tabela CodeSuggestions:
 
-## Setup Instructions
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd java-migration-app
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
-
-3. **Install the required dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up environment variables:**
-   Create a `.env` file in the root directory and add any necessary configuration settings.
-
-## Usage
-
-To run the application, execute the following command:
-
-```bash
-python src/main.py
+```sh
+aws dynamodb put-item \
+    --table-name CodeSuggestions --region us-east-1 \
+    --item '{
+        "AnalysisId": {"S": "66e51d1b-d294-4184-b0a6-dc0d2a568e76"},
+        "SuggestionId": {"S": "8b874d22-708e-40e7-b1e1-6c7a8470491b"}, 
+        "Analyzer": {"S": "java8to21"},
+        "FilePath": {"S": "/path/to/file.java"},
+        "Description": {"S": "Update method to use Java 21 features"},
+        "StartLine": {"N": "10"},
+        "EndLine": {"N": "20"},
+        "OriginalSnippet": {"S": "public void oldMethod() {}"},
+        "ModifiedCode": {"S": "public void newMethod() {}"},
+        "DifficultyLevel": {"N": "2"}
+    }' \
+    --endpoint-url http://localhost:4566
 ```
 
-You will be prompted to enter a Java code string. The application will analyze the code and provide suggestions for modernization.
+Add uma analise conclusiva na tabela CodeSuggestions:
 
-## Contributing
+```sh
+aws dynamodb put-item \
+    --table-name CodeSuggestions --region us-east-1 \
+    --item '{
+        "AnalysisId": {"S": "66e51d1b-d294-4184-b0a6-dc0d2a568e76"},
+        "SuggestionId": {"S": "8b874d22-708e-40e7-b1e1-6c7a8470491b"}, 
+        "Analyzer": {"S": "java8to21"},
+        "FilePath": {"S": "/path/to/file.java"},
+        "Description": {"S": "Update method to use Java 21 features"},
+        "StartLine": {"N": "10"},
+        "EndLine": {"N": "20"},
+        "OriginalSnippet": {"S": "public void oldMethod() {}"},
+        "ModifiedCode": {"S": "public void newMethod() {}"},
+        "DifficultyLevel": {"N": "2"},
+        "Last": {"BOOL": true}
+    }' \
+    --endpoint-url http://localhost:4566
+```
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue for any enhancements or bug fixes.
+Query para recuperar CodeSugestions de uma analise especifica:
 
-## License
+```sh
+aws dynamodb query \
+    --table-name CodeSuggestions --region us-east-1 \
+    --key-condition-expression "AnalysisId = :analysisId" \
+    --expression-attribute-values '{":analysisId":{"S":"analysis-123"}}' \
+    --endpoint-url http://localhost:4566
+```
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+Pegar uma sugestions especifica: 
+
+```sh
+aws dynamodb get-item --region us-east-1 \
+    --table-name CodeSuggestions \
+    --key '{"SuggestionId": {"S": "suggestion-1"}, "AnalysisId": { "S": "analysis-123"}}' \  
+    --endpoint-url http://localhost:4566
+```
