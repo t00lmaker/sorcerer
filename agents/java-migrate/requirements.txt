@@ -4,4 +4,6 @@ fastapi
 uvicorn
 python-dotenv
 langchain-google-genai
+boto3
+asyncio-throttle
 
