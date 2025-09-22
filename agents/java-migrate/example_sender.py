@@ -2,11 +2,14 @@
 Exemplo de como enviar uma mensagem para a fila SQS para análise de código.
 Este script demonstra o formato esperado das mensagens.
 """
+import os
 import boto3
 import json
 import uuid
 from datetime import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 def send_analysis_request(java_code: str, file_path: str, queue_url: str):
     """
     Envia uma requisição de análise de código para a fila SQS.
@@ -16,7 +19,7 @@ def send_analysis_request(java_code: str, file_path: str, queue_url: str):
         file_path: Caminho do arquivo (pode ser fictício)
         queue_url: URL da fila SQS
     """
-    sqs_client = boto3.client('sqs')
+    sqs_client = boto3.client('sqs', 'us-east-1')
     
     message_body = {
         "request_id": str(uuid.uuid4()),
@@ -72,11 +75,9 @@ if __name__ == "__main__":
     }
     """
     
-    # Configurar suas credenciais AWS e URL da fila
-    queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/code-analysis-queue"
     
     try:
-        send_analysis_request(example_java_code, "ExampleClass.java", queue_url)
+        send_analysis_request(example_java_code, "ExampleClass.java", os.getenv('SQS_QUEUE_URL'))
         print("Requisição enviada com sucesso!")
     except Exception as e:
         print(f"Erro ao enviar requisição: {e}")
