@@ -51,6 +51,22 @@ services:
             --region us-east-1 || echo 'Tabela DynamoDB já existe.';
       echo 'Tabela DynamoDB criada ou já existe.';
       "
+    
+  local-admin:
+    container_name: local_admin
+    image: devbilalbhatti/local-admin
+    restart: unless-stopped
+    environment:
+      - APP_PORT=4000
+      - APP_TIMEOUT=4000
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - LOCALSTACK_REGION=us-east-1
+    ports:
+      - 4000:4000
+    depends_on:
+      - localstack      
+
+      
   api:
     build:
       context: api

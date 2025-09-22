@@ -29,6 +29,7 @@ class AnalyzeInput(BaseModel):
 
 class Suggestion(BaseModel):
     id: Optional[UUID] = None
+    analyzer_id: Optional[UUID] = None
     file_path: str
     description: str
     start_line: int
@@ -79,6 +80,7 @@ def get_analyze(analyze_id: str):
         suggestions = [
             Suggestion(
                 id=item['SuggestionId'],
+                analyzer_id=item['AnalysisId'],
                 file_path=item['FilePath'],
                 analyzer=AnalyzerEnum(item['Analyzer']),
                 description=item['Description'],

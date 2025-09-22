@@ -1,35 +1,32 @@
 """
 Exemplo de como enviar uma mensagem para a fila SQS para análise de código.
-Este script demonstra o formato esperado das mensagens.
+Este script demonstra o formato esperado das mensagens usando o modelo Analyze.
 """
 import os
 import boto3
 import json
 import uuid
-from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
-def send_analysis_request(java_code: str, file_path: str, queue_url: str):
+
+def send_analysis_request(repo: str, analyzers: list[str], params: dict = None, queue_url: str = None):
     """
     Envia uma requisição de análise de código para a fila SQS.
     
     Args:
-        java_code: Código Java a ser analisado
-        file_path: Caminho do arquivo (pode ser fictício)
+        repo: Nome/URL do repositório a ser analisado
+        analyzers: Lista de analisadores a executar ["java8to21", "simpler3to4"]
+        params: Parâmetros adicionais (opcional)
         queue_url: URL da fila SQS
     """
-    sqs_client = boto3.client('sqs', 'us-east-1')
+    sqs_client = boto3.client('sqs')
     
     message_body = {
-        "request_id": str(uuid.uuid4()),
-        "timestamp": datetime.now().isoformat(),
-        "java_code": java_code,
-        "file_path": file_path,
-        "metadata": {
-            "source": "example_sender",
-            "priority": "normal"
-        }
+        "id": str(uuid.uuid4()),
+        "repo": repo,
+        "analyzers": analyzers,
+        "params": params or {}
     }
     
     response = sqs_client.send_message(
@@ -37,47 +34,41 @@ def send_analysis_request(java_code: str, file_path: str, queue_url: str):
         MessageBody=json.dumps(message_body),
         MessageAttributes={
             'request_type': {
-                'StringValue': 'java_code_analysis',
+                'StringValue': 'code_analysis',
                 'DataType': 'String'
             },
-            'priority': {
-                'StringValue': 'normal',
+            'repo': {
+                'StringValue': repo,
                 'DataType': 'String'
             }
         }
     )
     
     print(f"Mensagem enviada com ID: {response['MessageId']}")
+    print(f"Request ID: {message_body['id']}")
     return response
 
 if __name__ == "__main__":
-    # Exemplo de código Java
-    example_java_code = """
-    public class ExampleClass {
-        private String name;
-        
-        public ExampleClass(String name) {
-            this.name = name;
-        }
-        
-        public String getName() {
-            return name;
-        }
-        
-        public void setName(String name) {
-            this.name = name;
-        }
-        
-        // Método com possível melhoria
-        public void printInfo() {
-            System.out.println("Nome: " + name);
-        }
-    }
-    """
-    
+    # Configurar suas credenciais AWS e URL da fila
+    queue_url = os.getenv("SQS_QUEUE_URL", "http://localhost:4566/000000000000/your-queue-name")
     
     try:
-        send_analysis_request(example_java_code, "ExampleClass.java", os.getenv('SQS_QUEUE_URL'))
-        print("Requisição enviada com sucesso!")
+        # Exemplo 1: Apenas migração Java
+        send_analysis_request(
+            repo="https://github.com/example/java-project.git",
+            analyzers=["java8to21"],
+            params={"branch": "main", "target_version": "21"},
+            queue_url=queue_url
+        )
+        
+        # Exemplo 2: Múltiplos analisadores
+        send_analysis_request(
+            repo="my-local-repo",
+            analyzers=["java8to21", "simpler3to4"],
+            params={"priority": "high"},
+            queue_url=queue_url
+        )
+        
+        print("Requisições enviadas com sucesso!")
     except Exception as e:
-        print(f"Erro ao enviar requisição: {e}")
+        print(f"Erro ao enviar requisições: {e}")
